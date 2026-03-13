@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 🌐 Веб-приложение
+  portfolio-web:
+    build: .
+    container_name: portfolio-web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./chroma_db:/app/chroma_db
+    networks:
+      - portfolio-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 🤖 Telegram бот
+  portfolio-telegram:
+    build: .
+    container_name: portfolio-telegram
+    restart: unless-stopped
+    command: . venv/bin/activate && python telegram_bot.py
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - portfolio-network
+    depends_on:
+      - portfolio-web
+
+networks:
+  portfolio-network:
+    driver: bridge
+
+volumes:
+  logs:
+  data:
+  chroma_db:
