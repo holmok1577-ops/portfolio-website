@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель | Станислав</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --error: #ef4444;
+            --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        .login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--dark);
+        }
+        .login-box {
+            background: var(--dark-light);
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .login-box h1 {
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px; }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--dark);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 15px;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        textarea { resize: vertical; min-height: 100px; }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: var(--text);
+        }
+        .btn-danger { background: var(--error); color: white; }
+        .hidden { display: none !important; }
+
+        /* Admin Panel */
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+        .sidebar {
+            background: var(--dark-light);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
+        }
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        .sidebar-logo i { font-size: 28px; color: var(--primary); }
+        .sidebar-logo span { font-size: 20px; font-weight: 700; }
+        .nav-section { margin-bottom: 30px; }
+        .nav-section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            margin-bottom: 4px;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(99,102,241,0.1);
+            color: var(--text);
+        }
+        .nav-item.active { background: var(--gradient); color: white; }
+        .nav-item i { width: 20px; text-align: center; }
+
+        .main-content { padding: 30px; overflow-y: auto; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .header h1 { font-size: 28px; }
+        .header-actions { display: flex; gap: 12px; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+        .card {
+            background: var(--dark-light);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .card-title { font-size: 18px; font-weight: 600; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-grid .form-group.full-width { grid-column: 1 / -1; }
+
+        .items-list { max-height: 400px; overflow-y: auto; }
+        .item-card {
+            background: var(--dark);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .item-title { font-weight: 600; color: var(--primary); }
+        .item-actions { display: flex; gap: 8px; }
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 6px;
+        }
+        .btn-sm { padding: 6px 12px; font-size: 13px; }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            animation: slideIn 0.3s;
+            z-index: 1000;
+        }
+        .notification.success { background: var(--success); }
+        .notification.error { background: var(--error); }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .admin-layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <h1><i class="fas fa-lock"></i> Админ панель</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" id="password" placeholder="Введите пароль" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-layout hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <i class="fas fa-brain"></i>
+                <span>Админ</span>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Контент</div>
+                <div class="nav-item active" data-tab="general" onclick="showTab('general')">
+                    <i class="fas fa-home"></i> Общие
+                </div>
+                <div class="nav-item" data-tab="about" onclick="showTab('about')">
+                    <i class="fas fa-user"></i> Обо мне
+                </div>
+                <div class="nav-item" data-tab="services" onclick="showTab('services')">
+                    <i class="fas fa-briefcase"></i> Услуги
+                </div>
+                <div class="nav-item" data-tab="projects" onclick="showTab('projects')">
+                    <i class="fas fa-code"></i> Проекты
+                </div>
+                <div class="nav-item" data-tab="contacts" onclick="showTab('contacts')">
+                    <i class="fas fa-address-book"></i> Контакты
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-section-title">Система</div>
+                <div class="nav-item" data-tab="password" onclick="showTab('password')">
+                    <i class="fas fa-key"></i> Пароль
+                </div>
+                <div class="nav-item" data-tab="chatbot" onclick="showTab('chatbot')">
+                    <i class="fas fa-robot"></i> Чат-бот
+                </div>
+                <div class="nav-item" data-tab="data" onclick="showTab('data')">
+                    <i class="fas fa-database"></i> Данные
+                </div>
+                <div class="nav-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1 id="pageTitle">Общие настройки</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportData()">
+                        <i class="fas fa-download"></i> Экспорт
+                    </button>
+                    <button class="btn btn-secondary" onclick="importData()">
+                        <i class="fas fa-upload"></i> Импорт
+                    </button>
+                    <button class="btn btn-primary" onclick="saveAllData()">
+                        <i class="fas fa-save"></i> Сохранить все
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab: General -->
+            <div id="tab-general" class="tab-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Hero секция</span>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Заголовок</label>
+                            <input type="text" id="heroTitle" value="Промпт-инженер & AI-разработчик">
+                        </div>
+                        <div class="form-group">
+                            <label>Подзаголовок</label>
+                            <input type="text" id="heroSubtitle" value="Создаю эффективные решения на основе AI">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Описание</label>
+                            <textarea id="heroDesc">Веду проекты от идеи до финала</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Статистика</span>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Число 1</label>
+                            <input type="text" id="stat1Number" value="50+">
+                        </div>
+                        <div class="form-group">
+                            <label>Текст 1</label>
+                            <input type="text" id="stat1Label" value="Проектов">
+                        </div>
+                        <div class="form-group">
+                            <label>Число 2</label>
+                            <input type="text" id="stat2Number" value="1+">
+                        </div>
+                        <div class="form-group">
+                            <label>Текст 2</label>
+                            <input type="text" id="stat2Label" value="Год поддержки">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: About -->
+            <div id="tab-about" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Обо мне</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Основной текст</label>
+                        <textarea id="aboutLead" rows="3">Меня зовут Станислав, и я профессиональный промпт-инженер.</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Дополнительный текст</label>
+                        <textarea id="aboutText" rows="3">Веду проекты от идеи до финала. Специализируюсь на LLM, RAG-системах.</textarea>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Гарантия</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Заголовок</label>
+                        <input type="text" id="guaranteeTitle" value="Годовая поддержка">
+                    </div>
+                    <div class="form-group">
+                        <label>Текст</label>
+                        <textarea id="guaranteeText">Бесплатная поддержка всех проектов в течение первого года.</textarea>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Навыки</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Навыки (через запятую)</label>
+                        <input type="text" id="skillsList" value="LLM & GPT, AI-ассистенты, RAG системы, Промпт-инжиниринг, Python, Telegram боты">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Services -->
+            <div id="tab-services" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Добавить услугу</span>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Название</label>
+                            <input type="text" id="newServiceTitle" placeholder="Телеграм-бот с AI">
+                        </div>
+                        <div class="form-group">
+                            <label>Иконка (FontAwesome)</label>
+                            <input type="text" id="newServiceIcon" placeholder="fas fa-robot" value="fas fa-robot">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Описание</label>
+                            <textarea id="newServiceDesc" placeholder="Описание услуги..."></textarea>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addService()">
+                        <i class="fas fa-plus"></i> Добавить услугу
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Список услуг</span>
+                    </div>
+                    <div id="servicesList" class="items-list"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Projects -->
+            <div id="tab-projects" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Добавить проект</span>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Название</label>
+                            <input type="text" id="newProjectTitle" placeholder="Название проекта">
+                        </div>
+                        <div class="form-group">
+                            <label>Технологии</label>
+                            <input type="text" id="newProjectTech" placeholder="Python, OpenAI, FastAPI">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Описание</label>
+                            <textarea id="newProjectDesc" placeholder="Описание проекта..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Ссылка</label>
+                            <input type="url" id="newProjectLink" placeholder="https://github.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label>Изображение</label>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <input type="url" id="newProjectImage" placeholder="URL изображения" style="flex:1;">
+                                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('newProjectImageFile').click()">
+                                    <i class="fas fa-upload"></i> Загрузить
+                                </button>
+                                <input type="file" id="newProjectImageFile" accept="image/*" style="display:none" onchange="handleImageUpload('newProjectImage', this)">
+                            </div>
+                            <img id="newProjectImagePreview" style="max-width:100px; max-height:60px; margin-top:5px; display:none; border-radius:4px; border:1px solid var(--border);">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addProject()">
+                        <i class="fas fa-plus"></i> Добавить проект
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Список проектов</span>
+                    </div>
+                    <div id="projectsList" class="items-list"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Contacts -->
+            <div id="tab-contacts" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Контактная информация</span>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="contactEmail" value="email@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Telegram</label>
+                            <input type="text" id="contactTelegram" value="@username">
+                        </div>
+                        <div class="form-group">
+                            <label>Телефон</label>
+                            <input type="tel" id="contactPhone" value="+7 (999) 123-45-67">
+                        </div>
+                        <div class="form-group">
+                            <label>GitHub</label>
+                            <input type="url" id="contactGithub" value="https://github.com/holmok1577-ops">
+                        </div>
+                        <div class="form-group">
+                            <label>Docker Hub</label>
+                            <input type="url" id="contactDocker" value="https://hub.docker.com/repositories/holmok1577">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Password -->
+            <div id="tab-password" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Смена пароля администратора</span>
+                    </div>
+                    <form id="passwordForm">
+                        <div class="form-group">
+                            <label>Текущий пароль</label>
+                            <input type="password" id="currentPassword" required placeholder="Введите текущий пароль">
+                        </div>
+                        <div class="form-group">
+                            <label>Новый пароль</label>
+                            <input type="password" id="newPassword" required placeholder="Введите новый пароль" minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label>Подтвердите новый пароль</label>
+                            <input type="password" id="confirmPassword" required placeholder="Повторите новый пароль">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-key"></i> Изменить пароль
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab: Chatbot -->
+            <div id="tab-chatbot" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Настройки чат-бота</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Приветственное сообщение</label>
+                        <textarea id="chatWelcome" rows="3">Привет! Я Станислав, ваш AI-ассистент.</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Быстрые вопросы (через запятую)</label>
+                        <input type="text" id="chatQuickQuestions" value="Сколько стоит разработка бота?, Какие сроки разработки?, Расскажи о примерах работ">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Data -->
+            <div id="tab-data" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Управление данными</span>
+                    </div>
+                    <p style="margin-bottom: 20px; color: var(--text-muted);">
+                        Экспортируйте все данные для резервной копии или импортируйте ранее сохраненные настройки.
+                    </p>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            <i class="fas fa-download"></i> Экспорт JSON
+                        </button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+                            <i class="fas fa-upload"></i> Импорт JSON
+                        </button>
+                        <input type="file" id="importFile" accept=".json" style="display: none" onchange="importData(this)">
+                        <button class="btn btn-danger" onclick="clearAllData()">
+                            <i class="fas fa-trash"></i> Очистить все
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Data storage
+        
+        let siteData = {
+            hero: {
+                title: 'Промпт-инженер & AI-разработчик',
+                subtitle: 'Создаю эффективные решения на основе AI',
+                description: 'Веду проекты от идеи до финала',
+                stats: [
+                    { number: '50+', label: 'Проектов' },
+                    { number: '1+', label: 'Год поддержки' },
+                    { number: '100%', label: 'Гарантия' }
+                ]
+            },
+            about: {
+                lead: 'Меня зовут Станислав, и я профессиональный промпт-инженер.',
+                text: 'Веду проекты от идеи до финала. Специализируюсь на LLM, RAG-системах и бизнес-интеграции AI.',
+                guarantee: {
+                    title: 'Годовая поддержка',
+                    text: 'Бесплатная поддержка всех проектов в течение первого года.'
+                },
+                skills: ['LLM & GPT', 'AI-ассистенты', 'RAG системы', 'Промпт-инжиниринг', 'Python', 'Telegram боты']
+            },
+            services: [
+                { id: 1, icon: 'fas fa-robot', title: 'Телеграм-бот с AI', description: 'Интеллектуальный бот для вашего бизнеса' },
+                { id: 2, icon: 'fas fa-brain', title: 'AI-ассистент', description: 'Персональный AI-помощник для задач' },
+                { id: 3, icon: 'fas fa-database', title: 'RAG-система', description: 'База знаний с семантическим поиском' }
+            ],
+            projects: [
+                { id: 1, title: 'AI Чат-бот', technology: 'Python, OpenAI', description: 'Телеграм бот с GPT', link: '#', image: '' },
+                { id: 2, title: 'RAG Система', technology: 'Python, ChromaDB', description: 'Система поиска по документам', link: '#', image: '' }
+            ],
+            contacts: {
+                email: 'email@example.com',
+                telegram: '@username',
+                phone: '+7 (999) 123-45-67',
+                github: 'https://github.com/holmok1577-ops',
+                docker: 'https://hub.docker.com/repositories/holmok1577'
+            },
+            chatbot: {
+                welcome: 'Привет! Я Станислав, ваш AI-ассистент.',
+                quickQuestions: ['Сколько стоит разработка бота?', 'Какие сроки разработки?', 'Расскажи о примерах работ']
+            }
+        };
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('siteData');
+            if (saved) {
+                siteData = JSON.parse(saved);
+            }
+            updateUI();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            collectFormData();
+            
+            const dataStr = JSON.stringify(siteData);
+            const sizeInMB = dataStr.length / (1024 * 1024);
+            
+            if (sizeInMB > 4) { // 4MB limit to be safe
+                showNotification(`Размер данных слишком большой: ${sizeInMB.toFixed(1)}MB. Удалите некоторые изображения.`, 'error');
+                return;
+            }
+            
+            try {
+                localStorage.setItem('siteData', dataStr);
+                showNotification('Данные сохранены', 'success');
+            } catch (e) {
+                showNotification('Ошибка сохранения данных', 'error');
+            }
+            
+            // Notify main page
+            window.postMessage({ type: 'dataUpdated', data: siteData }, '*');
+        }
+
+        function saveAllData() {
+            collectFormData();
+            saveData();
+        }
+
+        // Collect all form data
+        function collectFormData() {
+            siteData.hero.title = document.getElementById('heroTitle').value;
+            siteData.hero.subtitle = document.getElementById('heroSubtitle').value;
+            siteData.hero.description = document.getElementById('heroDesc').value;
+            
+            siteData.about.lead = document.getElementById('aboutLead').value;
+            siteData.about.text = document.getElementById('aboutText').value;
+            siteData.about.guarantee.title = document.getElementById('guaranteeTitle').value;
+            siteData.about.guarantee.text = document.getElementById('guaranteeText').value;
+            siteData.about.skills = document.getElementById('skillsList').value.split(',').map(s => s.trim());
+            
+            siteData.contacts.email = document.getElementById('contactEmail').value;
+            siteData.contacts.telegram = document.getElementById('contactTelegram').value;
+            siteData.contacts.phone = document.getElementById('contactPhone').value;
+            siteData.contacts.github = document.getElementById('contactGithub').value;
+            siteData.contacts.docker = document.getElementById('contactDocker').value;
+            
+            siteData.chatbot.welcome = document.getElementById('chatWelcome').value;
+            siteData.chatbot.quickQuestions = document.getElementById('chatQuickQuestions').value.split(',').map(s => s.trim());
+        }
+
+        // Update UI with data
+        function updateUI() {
+            document.getElementById('heroTitle').value = siteData.hero.title;
+            document.getElementById('heroSubtitle').value = siteData.hero.subtitle;
+            document.getElementById('heroDesc').value = siteData.hero.description;
+            
+            document.getElementById('aboutLead').value = siteData.about.lead;
+            document.getElementById('aboutText').value = siteData.about.text;
+            document.getElementById('guaranteeTitle').value = siteData.about.guarantee.title;
+            document.getElementById('guaranteeText').value = siteData.about.guarantee.text;
+            document.getElementById('skillsList').value = siteData.about.skills.join(', ');
+            
+            document.getElementById('contactEmail').value = siteData.contacts.email;
+            document.getElementById('contactTelegram').value = siteData.contacts.telegram;
+            document.getElementById('contactPhone').value = siteData.contacts.phone;
+            document.getElementById('contactGithub').value = siteData.contacts.github;
+            document.getElementById('contactDocker').value = siteData.contacts.docker;
+            
+            document.getElementById('chatWelcome').value = siteData.chatbot.welcome;
+            document.getElementById('chatQuickQuestions').value = siteData.chatbot.quickQuestions.join(', ');
+            
+            renderServices();
+            renderProjects();
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.querySelector('.nav-item[data-tab="' + tabName + '"]').classList.add('active');
+            
+            const titles = {
+                general: 'Общие настройки',
+                about: 'Обо мне',
+                services: 'Услуги',
+                projects: 'Проекты',
+                contacts: 'Контакты',
+                password: 'Смена пароля',
+                chatbot: 'Чат-бот',
+                data: 'Данные'
+            };
+            document.getElementById('pageTitle').textContent = titles[tabName];
+        }
+
+        // Services
+        let editingServiceIndex = -1;
+        
+        function renderServices() {
+            const container = document.getElementById('servicesList');
+            container.innerHTML = siteData.services.map((s, i) => `
+                <div class="item-card" id="service-${i}">
+                    <div class="item-header">
+                        <span class="item-title"><i class="${s.icon}"></i> ${s.title}</span>
+                        <div class="item-actions">
+                            <button class="btn btn-secondary btn-icon btn-sm" onclick="editService(${i})" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-icon btn-sm" onclick="deleteService(${i})" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p style="color: var(--text-muted);">${s.description}</p>
+                    <div class="edit-form" id="service-edit-${i}" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Название</label>
+                                <input type="text" id="edit-srv-title-${i}" value="${s.title}">
+                            </div>
+                            <div class="form-group">
+                                <label>Иконка</label>
+                                <input type="text" id="edit-srv-icon-${i}" value="${s.icon}">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Описание</label>
+                                <textarea id="edit-srv-desc-${i}" rows="2">${s.description}</textarea>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn btn-primary btn-sm" onclick="saveServiceEdit(${i})">
+                                <i class="fas fa-save"></i> Сохранить
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="cancelServiceEdit(${i})">
+                                Отмена
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editService(index) {
+            document.querySelectorAll('.edit-form').forEach(el => el.style.display = 'none');
+            document.getElementById(`service-edit-${index}`).style.display = 'block';
+        }
+
+        function cancelServiceEdit(index) {
+            document.getElementById(`service-edit-${index}`).style.display = 'none';
+        }
+
+        function saveServiceEdit(index) {
+            siteData.services[index].title = document.getElementById(`edit-srv-title-${index}`).value;
+            siteData.services[index].icon = document.getElementById(`edit-srv-icon-${index}`).value;
+            siteData.services[index].description = document.getElementById(`edit-srv-desc-${index}`).value;
+            saveData();
+            renderServices();
+            showNotification('Услуга обновлена', 'success');
+        }
+
+        function addService() {
+            const title = document.getElementById('newServiceTitle').value;
+            const icon = document.getElementById('newServiceIcon').value;
+            const desc = document.getElementById('newServiceDesc').value;
+            
+            if (!title || !desc) {
+                showNotification('Заполните название и описание', 'error');
+                return;
+            }
+            
+            siteData.services.push({
+                id: Date.now(),
+                icon: icon || 'fas fa-briefcase',
+                title,
+                description: desc
+            });
+            
+            document.getElementById('newServiceTitle').value = '';
+            document.getElementById('newServiceDesc').value = '';
+            
+            renderServices();
+            saveData();
+        }
+
+        function deleteService(index) {
+            if (confirm('Удалить услугу?')) {
+                siteData.services.splice(index, 1);
+                renderServices();
+                saveData();
+            }
+        }
+
+        // Projects
+        let editingProjectIndex = -1;
+        
+        function renderProjects() {
+            const container = document.getElementById('projectsList');
+            container.innerHTML = siteData.projects.map((p, i) => `
+                <div class="item-card" id="project-${i}">
+                    <div class="item-header">
+                        <span class="item-title">${p.title}</span>
+                        <div class="item-actions">
+                            <button class="btn btn-secondary btn-icon btn-sm" onclick="editProject(${i})" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-icon btn-sm" onclick="deleteProject(${i})" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p style="color: var(--primary); font-size: 13px;">${p.technology}</p>
+                    <p style="color: var(--text-muted);">${p.description}</p>
+                    ${p.link ? `<a href="${p.link}" target="_blank" style="color: var(--primary); font-size: 13px;">${p.link}</a>` : ''}
+                    <div class="edit-form" id="project-edit-${i}" style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Название</label>
+                                <input type="text" id="edit-prj-title-${i}" value="${p.title}">
+                            </div>
+                            <div class="form-group">
+                                <label>Технологии</label>
+                                <input type="text" id="edit-prj-tech-${i}" value="${p.technology}">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Описание</label>
+                                <textarea id="edit-prj-desc-${i}" rows="2">${p.description}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Ссылка</label>
+                                <input type="url" id="edit-prj-link-${i}" value="${p.link || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Изображение</label>
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <input type="url" id="edit-prj-img-${i}" value="${p.image || ''}" style="flex:1;">
+                                    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('edit-prj-img-file-${i}').click()">
+                                        <i class="fas fa-upload"></i> Загрузить
+                                    </button>
+                                    <input type="file" id="edit-prj-img-file-${i}" accept="image/*" style="display:none" onchange="handleImageUpload('edit-prj-img-${i}', this)">
+                                </div>
+                                <img id="edit-prj-img-preview-${i}" src="${p.image || ''}" style="max-width:100px; max-height:60px; margin-top:5px; display:${p.image ? 'block' : 'none'}; border-radius:4px; border:1px solid var(--border);">
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button class="btn btn-primary btn-sm" onclick="saveProjectEdit(${i})">
+                                <i class="fas fa-save"></i> Сохранить
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="cancelProjectEdit(${i})">
+                                Отмена
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editProject(index) {
+            document.querySelectorAll('.edit-form').forEach(el => el.style.display = 'none');
+            document.getElementById(`project-edit-${index}`).style.display = 'block';
+        }
+
+        function cancelProjectEdit(index) {
+            document.getElementById(`project-edit-${index}`).style.display = 'none';
+        }
+
+        function saveProjectEdit(index) {
+            siteData.projects[index].title = document.getElementById(`edit-prj-title-${index}`).value;
+            siteData.projects[index].technology = document.getElementById(`edit-prj-tech-${index}`).value;
+            siteData.projects[index].description = document.getElementById(`edit-prj-desc-${index}`).value;
+            siteData.projects[index].link = document.getElementById(`edit-prj-link-${index}`).value;
+            siteData.projects[index].image = document.getElementById(`edit-prj-img-${index}`).value;
+            saveData();
+            renderProjects();
+            showNotification('Проект обновлен', 'success');
+        }
+
+        function addProject() {
+            const title = document.getElementById('newProjectTitle').value;
+            const tech = document.getElementById('newProjectTech').value;
+            const desc = document.getElementById('newProjectDesc').value;
+            const link = document.getElementById('newProjectLink').value;
+            const image = document.getElementById('newProjectImage').value;
+            
+            if (!title || !desc) {
+                showNotification('Заполните название и описание', 'error');
+                return;
+            }
+            
+            siteData.projects.push({
+                id: Date.now(),
+                title,
+                technology: tech,
+                description: desc,
+                link,
+                image
+            });
+            
+            document.getElementById('newProjectTitle').value = '';
+            document.getElementById('newProjectTech').value = '';
+            document.getElementById('newProjectDesc').value = '';
+            document.getElementById('newProjectLink').value = '';
+            document.getElementById('newProjectImage').value = '';
+            document.getElementById('newProjectImagePreview').style.display = 'none';
+            
+            renderProjects();
+            saveData();
+        }
+
+        function deleteProject(index) {
+            if (confirm('Удалить проект?')) {
+                siteData.projects.splice(index, 1);
+                renderProjects();
+                saveData();
+            }
+        }
+
+        // Export/Import
+        function exportData() {
+            const dataStr = JSON.stringify(siteData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'site-data-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            showNotification('Данные экспортированы', 'success');
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    siteData = JSON.parse(e.target.result);
+                    updateUI();
+                    saveData();
+                    showNotification('Данные импортированы', 'success');
+                } catch (err) {
+                    showNotification('Ошибка импорта: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (confirm('ВСЕ ДАННЫЕ БУДУТ УДАЛЕНЫ! Продолжить?')) {
+                localStorage.removeItem('siteData');
+                location.reload();
+            }
+        }
+
+        // Image compression function
+        function compressImage(dataUrl, maxWidth = 800, maxHeight = 600, quality = 0.8) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let { width, height } = img;
+                    
+                    // Calculate new dimensions while maintaining aspect ratio
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width *= ratio;
+                        height *= ratio;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const compressed = canvas.toDataURL('image/jpeg', quality);
+                    resolve(compressed);
+                };
+                img.onerror = () => resolve(dataUrl); // If compression fails, return original
+                img.src = dataUrl;
+            });
+        }
+
+        // Image upload handler
+        function handleImageUpload(inputId, fileInput) {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            // Check file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showNotification('Размер файла слишком большой (макс. 2MB)', 'error');
+                return;
+            }
+            
+            // Check file type
+            if (!file.type.startsWith('image/')) {
+                showNotification('Выберите изображение', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                let dataUrl = e.target.result;
+                
+                // Compress the image
+                try {
+                    dataUrl = await compressImage(dataUrl);
+                } catch (err) {
+                    console.warn('Image compression failed, using original:', err);
+                }
+                
+                // Set value to input
+                document.getElementById(inputId).value = dataUrl;
+                
+                // Show preview
+                const previewId = inputId.replace('img-', 'img-preview-').replace('Image', 'ImagePreview');
+                const preview = document.getElementById(previewId);
+                if (preview) {
+                    preview.src = dataUrl;
+                    preview.style.display = 'block';
+                }
+                
+                showNotification('Изображение загружено и сжато', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Auth
+        function checkAuth() {
+            // Load password from localStorage or use default
+            const savedPassword = localStorage.getItem('adminPassword') || 'admin123';
+            window.ADMIN_PASSWORD = savedPassword;
+            
+            if (sessionStorage.getItem('adminAuth') === 'true') {
+                showAdminPanel();
+            }
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+            loadData();
+        }
+
+        function logout() {
+            sessionStorage.removeItem('adminAuth');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+        }
+
+        // Password change
+        function changePassword() {
+            const currentPass = document.getElementById('currentPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+            
+            // Check current password
+            if (currentPass !== window.ADMIN_PASSWORD) {
+                showNotification('Неверный текущий пароль', 'error');
+                return;
+            }
+            
+            // Check new password length
+            if (newPass.length < 6) {
+                showNotification('Новый пароль должен содержать минимум 6 символов', 'error');
+                return;
+            }
+            
+            // Check if passwords match
+            if (newPass !== confirmPass) {
+                showNotification('Новый пароль и подтверждение не совпадают', 'error');
+                return;
+            }
+            
+            // Check if new password is different
+            if (newPass === window.ADMIN_PASSWORD) {
+                showNotification('Новый пароль должен отличаться от текущего', 'error');
+                return;
+            }
+            
+            // Save new password
+            localStorage.setItem('adminPassword', newPass);
+            window.ADMIN_PASSWORD = newPass;
+            
+            // Clear form and show success
+            document.getElementById('passwordForm').reset();
+            showNotification('Пароль успешно изменен', 'success');
+        }
+
+        // Notification
+        function showNotification(message, type = 'success') {
+            const notif = document.createElement('div');
+            notif.className = 'notification ' + type;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        // Event listeners
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('password').value;
+            if (pass === window.ADMIN_PASSWORD) {
+                sessionStorage.setItem('adminAuth', 'true');
+                showAdminPanel();
+            } else {
+                showNotification('Неверный пароль', 'error');
+            }
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            changePassword();
+        });
+
+        // Init
+        checkAuth();
+    </script>
+</body>
+</html>

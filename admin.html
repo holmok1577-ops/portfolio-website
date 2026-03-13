@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель - Станислав</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --dark-bg: #0f172a;
+            --light-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            background: var(--light-bg);
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .admin-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .admin-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .admin-section {
+            background: var(--light-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .admin-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.2);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: var(--dark-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--light-bg);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: var(--dark-bg);
+            border-color: var(--primary-color);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: var(--dark-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 100px auto;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.error {
+            background: var(--error-color);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container" id="login-container">
+        <div class="login-form">
+            <h2 class="admin-title">Вход в админ панель</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="password">Пароль администратора</label>
+                    <input type="password" id="password" class="form-control" placeholder="Введите пароль">
+                </div>
+                <button type="submit" class="btn btn-primary">Войти</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container hidden" id="admin-panel">
+        <header class="admin-header">
+            <h1 class="admin-title">Админ панель</h1>
+            <button class="btn btn-secondary" onclick="logout()">Выйти</button>
+        </header>
+
+        <div class="admin-sections">
+            <!-- Управление профилем -->
+            <section class="admin-section">
+                <h2 class="section-title">
+                    <i class="fas fa-user"></i>
+                    Профиль
+                </h2>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="name">Имя</label>
+                        <input type="text" id="name" class="form-control" value="Станислав">
+                    </div>
+                    <div class="form-group">
+                        <label for="title">Заголовок</label>
+                        <input type="text" id="title" class="form-control" value="Промпт-инженер">
+                    </div>
+                    <div class="form-group">
+                        <label for="bio">Описание</label>
+                        <textarea id="bio" class="form-control">Создаю эффективные решения на основе технологий искусственного интеллекта. Веду проекты от идеи до финала, разрабатываю ИИ-помощников с нуля до готового продукта.</textarea>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Управление контактами -->
+            <section class="admin-section">
+                <h2 class="section-title">
+                    <i class="fas fa-envelope"></i>
+                    Контакты
+                </h2>
+                <form id="contacts-form">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="telegram">Telegram</label>
+                        <input type="text" id="telegram" class="form-control" placeholder="@username">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input type="tel" id="phone" class="form-control" placeholder="+79991234567">
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Управление проектами -->
+            <section class="admin-section">
+                <h2 class="section-title">
+                    <i class="fas fa-code"></i>
+                    Проекты
+                </h2>
+                <form id="projects-form">
+                    <div id="projects-list">
+                        <!-- Проекты будут загружены через JavaScript -->
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="addProject()">Добавить проект</button>
+                        <button type="submit" class="btn btn-primary">Сохранить все</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Управление базой знаний -->
+            <section class="admin-section">
+                <h2 class="section-title">
+                    <i class="fas fa-database"></i>
+                    База знаний RAG
+                </h2>
+                <form id="knowledge-form">
+                    <div id="knowledge-list">
+                        <!-- Статьи базы знаний будут загружены через JavaScript -->
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="addKnowledgeItem()">Добавить статью</button>
+                        <button type="submit" class="btn btn-primary">Сохранить все</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Управление файлами -->
+            <section class="admin-section">
+                <h2 class="section-title">
+                    <i class="fas fa-image"></i>
+                    Медиа файлы
+                </h2>
+                <div class="form-group">
+                    <label for="file-upload">Загрузить файлы</label>
+                    <input type="file" id="file-upload" class="form-control" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+                </div>
+                <div id="files-list">
+                    <!-- Загруженные файлы будут показаны здесь -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="notification" id="notification" style="display: none;">
+        <span id="notification-message"></span>
+    </div>
+
+    <script>
+        // Простая "база данных" в localStorage
+        const ADMIN_PASSWORD = 'admin123'; // В продакшене использовать более надежный пароль
+        
+        let profile = JSON.parse(localStorage.getItem('profile') || '{}');
+        let contacts = JSON.parse(localStorage.getItem('contacts') || '{}');
+        let projects = JSON.parse(localStorage.getItem('projects') || '[]');
+        let knowledge = JSON.parse(localStorage.getItem('knowledge') || '[]');
+
+        // Проверка авторизации
+        function checkAuth() {
+            const isAuthenticated = localStorage.getItem('authenticated') === 'true';
+            if (isAuthenticated) {
+                document.getElementById('login-container').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                loadAdminData();
+            }
+        }
+
+        // Вход в админ панель
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            
+            if (password === ADMIN_PASSWORD) {
+                localStorage.setItem('authenticated', 'true');
+                checkAuth();
+                showNotification('Вход выполнен успешно', 'success');
+            } else {
+                showNotification('Неверный пароль', 'error');
+            }
+        });
+
+        // Выход из админ панели
+        function logout() {
+            localStorage.setItem('authenticated', 'false');
+            document.getElementById('login-container').classList.remove('hidden');
+            document.getElementById('admin-panel').classList.add('hidden');
+            document.getElementById('password').value = '';
+        }
+
+        // Загрузка данных в формы
+        function loadAdminData() {
+            // Загрузка профиля
+            if (profile.name) {
+                document.getElementById('name').value = profile.name || '';
+                document.getElementById('title').value = profile.title || '';
+                document.getElementById('bio').value = profile.bio || '';
+            }
+
+            // Загрузка контактов
+            document.getElementById('email').value = contacts.email || '';
+            document.getElementById('telegram').value = contacts.telegram || '';
+            document.getElementById('phone').value = contacts.phone || '';
+
+            // Загрузка проектов
+            renderProjects();
+
+            // Загрузка базы знаний
+            renderKnowledge();
+        }
+
+        // Сохранение профиля
+        document.getElementById('profile-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            profile = {
+                name: document.getElementById('name').value,
+                title: document.getElementById('title').value,
+                bio: document.getElementById('bio').value
+            };
+            localStorage.setItem('profile', JSON.stringify(profile));
+            showNotification('Профиль сохранен', 'success');
+        });
+
+        // Сохранение контактов
+        document.getElementById('contacts-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            contacts = {
+                email: document.getElementById('email').value,
+                telegram: document.getElementById('telegram').value,
+                phone: document.getElementById('phone').value
+            };
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            showNotification('Контакты сохранены', 'success');
+        });
+
+        // Функции для управления проектами
+        function renderProjects() {
+            const container = document.getElementById('projects-list');
+            container.innerHTML = '';
+            
+            projects.forEach((project, index) => {
+                const projectDiv = document.createElement('div');
+                projectDiv.className = 'info-item';
+                projectDiv.innerHTML = `
+                    <div class="info-label">Проект ${index + 1}</div>
+                    <input type="text" class="form-control" value="${project.title}" placeholder="Название" data-index="${index}" data-field="title">
+                    <input type="text" class="form-control" value="${project.description}" placeholder="Описание" data-index="${index}" data-field="description">
+                    <input type="text" class="form-control" value="${project.technology}" placeholder="Технология" data-index="${index}" data-field="technology">
+                    <input type="text" class="form-control" value="${project.link}" placeholder="Ссылка" data-index="${index}" data-field="link">
+                    <button type="button" class="btn btn-secondary" onclick="removeProject(${index})">Удалить</button>
+                `;
+                container.appendChild(projectDiv);
+            });
+        }
+
+        function addProject() {
+            projects.push({
+                title: '',
+                description: '',
+                technology: '',
+                link: ''
+            });
+            renderProjects();
+        }
+
+        function removeProject(index) {
+            projects.splice(index, 1);
+            renderProjects();
+            showNotification('Проект удален', 'success');
+        }
+
+        document.getElementById('projects-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputs = document.querySelectorAll('#projects-list input[data-index]');
+            inputs.forEach(input => {
+                const index = parseInt(input.dataset.index);
+                const field = input.dataset.field;
+                projects[index][field] = input.value;
+            });
+            localStorage.setItem('projects', JSON.stringify(projects));
+            showNotification('Проекты сохранены', 'success');
+        });
+
+        // Функции для управления базой знаний
+        function renderKnowledge() {
+            const container = document.getElementById('knowledge-list');
+            container.innerHTML = '';
+            
+            knowledge.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'info-item';
+                itemDiv.innerHTML = `
+                    <div class="info-label">Статья ${index + 1}</div>
+                    <input type="text" class="form-control" value="${item.title}" placeholder="Заголовок" data-index="${index}" data-field="title">
+                    <textarea class="form-control" placeholder="Содержание" data-index="${index}" data-field="content">${item.content}</textarea>
+                    <button type="button" class="btn btn-secondary" onclick="removeKnowledgeItem(${index})">Удалить</button>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function addKnowledgeItem() {
+            knowledge.push({
+                title: '',
+                content: ''
+            });
+            renderKnowledge();
+        }
+
+        function removeKnowledgeItem(index) {
+            knowledge.splice(index, 1);
+            renderKnowledge();
+            showNotification('Статья удалена', 'success');
+        }
+
+        document.getElementById('knowledge-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const inputs = document.querySelectorAll('#knowledge-list input[data-index], #knowledge-list textarea[data-index]');
+            inputs.forEach(input => {
+                const index = parseInt(input.dataset.index);
+                const field = input.dataset.field;
+                knowledge[index][field] = input.value;
+            });
+            localStorage.setItem('knowledge', JSON.stringify(knowledge));
+            showNotification('База знаний сохранена', 'success');
+        });
+
+        // Уведомления
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const messageElement = document.getElementById('notification-message');
+            
+            notification.className = 'notification';
+            if (type === 'error') {
+                notification.classList.add('error');
+            }
+            
+            messageElement.textContent = message;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Загрузка файлов
+        document.getElementById('file-upload').addEventListener('change', (e) => {
+            const files = e.target.files;
+            const filesList = document.getElementById('files-list');
+            
+            Array.from(files).forEach(file => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'info-item';
+                fileDiv.innerHTML = `
+                    <div class="info-label">${file.name}</div>
+                    <div class="info-value">${(file.size / 1024).toFixed(2)} KB</div>
+                `;
+                filesList.appendChild(fileDiv);
+            });
+            
+            showNotification(`Загружено ${files.length} файлов`, 'success');
+        });
+
+        // Инициализация
+        checkAuth();
+    </script>
+</body>
+</html>
